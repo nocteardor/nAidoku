@@ -314,7 +314,16 @@ extension HistoryView.ViewModel {
     // loader for manga/chapters missing from coredata
     private func processMissingMangaQueue() async {
         while !missingMangaQueue.isEmpty {
-            let mangaIds = Array(missingMangaQueue.keys.prefix(maxConcurrentLoads))
+            // load at most one manga per source each round, so a single source is never hit
+            // with several requests at once (opening history could trip its rate limit)
+            var roundSourceKeys = Set<String>()
+            var selectedIds: [MangaIdentifier] = []
+            for mangaId in missingMangaQueue.keys {
+                guard roundSourceKeys.insert(mangaId.sourceKey).inserted else { continue }
+                selectedIds.append(mangaId)
+                if selectedIds.count >= maxConcurrentLoads { break }
+            }
+            let mangaIds = selectedIds
             await withTaskGroup(of: Void.self) { group in
                 for mangaId in mangaIds {
                     guard let chapterIds = missingMangaQueue[mangaId] else { continue }
@@ -327,6 +336,12 @@ extension HistoryView.ViewModel {
             // remove processed manga from queue
             for mangaId in mangaIds {
                 missingMangaQueue.removeValue(forKey: mangaId)
+            }
+            // pause between rounds to stay under source rate limits
+            do {
+                try await Task.sleep(nanoseconds: 500_000_000)
+            } catch {
+                break // cancelled
             }
         }
         mangaLoadTask = nil
