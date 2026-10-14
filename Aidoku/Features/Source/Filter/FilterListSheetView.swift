@@ -342,7 +342,8 @@ private struct FilterListView: View {
 
                         case let .select(value):
                             if showTitles {
-                                let shouldShowSearch = value.usesTagStyle && value.options.count >= 15
+                                // long option lists get a search field whether or not the source uses the tag layout
+                                let shouldShowSearch = value.options.count >= 15
                                 titleView(filter.title, searchId: shouldShowSearch ? filter.id : nil)
                             }
                             let searchText = search[filter.id]
@@ -360,7 +361,8 @@ private struct FilterListView: View {
 
                         case let .multiselect(value):
                             if showTitles {
-                                let shouldShowSearch = value.usesTagStyle && value.options.count >= 15
+                                // long option lists get a search field whether or not the source uses the tag layout
+                                let shouldShowSearch = value.options.count >= 15
                                 titleView(filter.title, searchId: shouldShowSearch ? filter.id : nil)
                             }
                             let searchText = search[filter.id]
