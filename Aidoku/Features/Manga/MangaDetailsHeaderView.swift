@@ -169,21 +169,26 @@ struct MangaDetailsHeaderView: View {
                             .transition(.opacity)
 
                         if let source, source.supportsAuthorSearch {
-                            Button {
-                                // we'll need a better ui in the future for different author selection
-                                guard let author = authors.first else { return }
-
-                                let viewController = MangaListViewController(source: source, title: author)
-                                viewController.getEntries = { page in
-                                    try await source.getSearchMangaList(query: nil, page: page, filters: [
-                                        .text(id: "author", value: author)
-                                    ])
+                            if authors.count > 1 {
+                                // with several authors, let the reader choose which one to view
+                                Menu {
+                                    ForEach(Array(authors.enumerated()), id: \.offset) { _, author in
+                                        Button(author) {
+                                            openAuthorList(author, source: source)
+                                        }
+                                    }
+                                } label: {
+                                    label
                                 }
-                                path.push(viewController)
-                            } label: {
-                                label
+                                .buttonStyle(.borderless)
+                            } else if let author = authors.first {
+                                Button {
+                                    openAuthorList(author, source: source)
+                                } label: {
+                                    label
+                                }
+                                .buttonStyle(.borderless)
                             }
-                            .buttonStyle(.borderless)
                         } else {
                             label
                         }
@@ -394,6 +399,17 @@ struct MangaDetailsHeaderView: View {
                 }
             }
         }
+    }
+
+    /// Push a list of the source's manga by the given author.
+    private func openAuthorList(_ author: String, source: AidokuRunner.Source) {
+        let viewController = MangaListViewController(source: source, title: author)
+        viewController.getEntries = { page in
+            try await source.getSearchMangaList(query: nil, page: page, filters: [
+                .text(id: "author", value: author)
+            ])
+        }
+        path.push(viewController)
     }
 
     @ViewBuilder
