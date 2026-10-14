@@ -135,20 +135,29 @@ struct MangaDetailsHeaderView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Spacer(minLength: 0)
 
-                    Button {
-                        onTitlePressed?()
-                    } label: {
-                        Text(manga.title)
-                            .lineLimit(4)
-                            .font(.system(.title2).weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .minimumScaleFactor(0.75)
-                            .contentTransitionDisabledPlease()
-                            .multilineTextAlignment(.leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.borderless)
-                    .padding(.bottom, 4)
+                    // a plain tap used to start a search across every source right away,
+                    // so searching is now an explicit choice from the long-press menu
+                    Text(manga.title)
+                        .lineLimit(4)
+                        .font(.system(.title2).weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.75)
+                        .contentTransitionDisabledPlease()
+                        .multilineTextAlignment(.leading)
+                        .contentShape(Rectangle())
+                        .contextMenu {
+                            Button {
+                                onTitlePressed?()
+                            } label: {
+                                Label(NSLocalizedString("SEARCH_ALL_SOURCES"), systemImage: "magnifyingglass")
+                            }
+                            Button {
+                                UIPasteboard.general.string = manga.title
+                            } label: {
+                                Label(NSLocalizedString("COPY_TITLE"), systemImage: "doc.on.doc")
+                            }
+                        }
+                        .padding(.bottom, 4)
 
                     if let authors = manga.authors, !authors.isEmpty {
                         let label = Text(authors.joined(separator: ", "))
